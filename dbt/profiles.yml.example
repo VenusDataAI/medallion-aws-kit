@@ -1,0 +1,29 @@
+# Copy this file to ~/.dbt/profiles.yml and fill in your values.
+# Never commit the real profiles.yml — it contains credentials.
+
+medallion_lakehouse:
+  target: dev
+  outputs:
+    dev:
+      type: redshift
+      method: iam           # uses AWS IAM for authentication (recommended)
+      cluster_id: ""        # leave empty for Serverless
+      host: "{{ env_var('REDSHIFT_HOST') }}"
+      port: 5439
+      dbname: lakehouse
+      schema: dbt_dev
+      threads: 4
+      ra3_node: true        # required for Redshift Serverless + Spectrum
+      iam_profile: default  # AWS profile name in ~/.aws/credentials
+
+    prod:
+      type: redshift
+      method: iam
+      cluster_id: ""
+      host: "{{ env_var('REDSHIFT_HOST') }}"
+      port: 5439
+      dbname: lakehouse
+      schema: dbt_prod
+      threads: 8
+      ra3_node: true
+      iam_profile: prod
