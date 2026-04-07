@@ -1,0 +1,49 @@
+version: 2
+
+models:
+  - name: gold_orders_daily
+    description: >
+      Daily aggregation of orders per source system. Business-ready grain for
+      BI dashboards and reporting. No metadata columns exposed.
+    config:
+      materialized: incremental
+      schema: gold
+    tags: ["gold", "orders", "daily"]
+
+    columns:
+      - name: order_date
+        description: Calendar date of the orders.
+        tests:
+          - not_null
+
+      - name: source_system
+        description: Originating system identifier.
+        tests:
+          - not_null
+
+      - name: total_orders
+        description: Count of all orders placed on this date.
+        tests:
+          - not_null
+
+      - name: total_revenue
+        description: Sum of total_amount across all orders on this date.
+        tests:
+          - not_null
+
+      - name: avg_order_value
+        description: Average order value on this date.
+
+      - name: paid_orders
+        description: Count of orders with is_paid = true.
+
+      - name: unpaid_orders
+        description: Count of orders with is_paid = false or NULL.
+
+      - name: paid_revenue
+        description: Revenue from paid orders only.
+
+      - name: _refreshed_at
+        description: Timestamp of the dbt run that last wrote this row.
+        tests:
+          - not_null

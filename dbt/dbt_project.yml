@@ -1,0 +1,44 @@
+name: "medallion_lakehouse"
+version: "1.0.0"
+config-version: 2
+
+profile: "medallion_lakehouse"
+
+model-paths: ["models"]
+macro-paths: ["macros"]
+test-paths: ["tests"]
+analysis-paths: ["analyses"]
+seed-paths: ["seeds"]
+
+target-path: "target"
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+models:
+  medallion_lakehouse:
+    bronze:
+      +schema: bronze
+      +materialized: view          # bronze = raw source views only
+      +tags: ["bronze"]
+
+    silver:
+      +schema: silver
+      +materialized: table
+      +tags: ["silver"]
+      +post-hook:
+        - "GRANT SELECT ON {{ this }} TO GROUP analysts"
+
+    gold:
+      +schema: gold
+      +materialized: table
+      +tags: ["gold"]
+      +post-hook:
+        - "GRANT SELECT ON {{ this }} TO GROUP analysts"
+        - "GRANT SELECT ON {{ this }} TO GROUP bi_tools"
+
+vars:
+  source_system_default: "unknown"
+  bronze_database: "lakehouse"
+  silver_database: "lakehouse"
+  gold_database: "lakehouse"

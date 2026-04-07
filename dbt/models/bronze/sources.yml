@@ -1,0 +1,48 @@
+version: 2
+
+sources:
+  - name: bronze_orders
+    description: >
+      Raw orders data landed in the bronze layer via the ingestion pipeline.
+      Data is partitioned by source_system / entity / year / month / day.
+    database: "{{ var('bronze_database') }}"
+    schema: bronze_spectrum           # external schema pointing to Glue catalog
+    tags: ["bronze", "orders"]
+
+    tables:
+      - name: orders
+        description: >
+          Raw orders table crawled by the Glue crawler from the bronze S3 bucket.
+          One row per raw event — may contain duplicates and nulls.
+        external:
+          location: "s3://{{ env_var('BRONZE_BUCKET_NAME') }}/orders_system/orders/"
+          file_format: parquet
+          partitioned_by:
+            - name: year
+              data_type: varchar(4)
+            - name: month
+              data_type: varchar(2)
+            - name: day
+              data_type: varchar(2)
+
+        columns:
+          - name: order_id
+            description: Unique order identifier (source system)
+            tests:
+              - not_null
+          - name: customer_id
+            description: Customer identifier
+          - name: order_date
+            description: Date the order was placed (raw string from source)
+          - name: total_amount
+            description: Order total in source currency
+          - name: is_paid
+            description: "Payment flag — values: 'true','false','1','0',NULL"
+          - name: source_system
+            description: Identifier of the originating system
+            tests:
+              - not_null
+          - name: _raw_file
+            description: S3 key of the source file (populated by Glue)
+          - name: _raw_timestamp
+            description: UTC timestamp when the file was loaded

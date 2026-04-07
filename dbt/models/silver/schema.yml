@@ -1,0 +1,61 @@
+version: 2
+
+models:
+  - name: silver_orders
+    description: >
+      Deduplicated, typed, and standardised orders. One row per
+      (order_id, source_system) — latest record wins. Mandatory metadata
+      columns are appended by the add_metadata_columns macro.
+    config:
+      materialized: table
+      schema: silver
+    tags: ["silver", "orders"]
+
+    columns:
+      - name: order_id
+        description: Business key — unique order identifier from the source system.
+        tests:
+          - not_null
+          - unique
+
+      - name: customer_id
+        description: Customer identifier.
+        tests:
+          - not_null_proportion:
+              min_proportion: 0.99
+
+      - name: order_date
+        description: Date the order was placed (typed to DATE).
+        tests:
+          - not_null
+
+      - name: total_amount
+        description: Order total in source currency (NUMERIC 18,4).
+        tests:
+          - not_null
+
+      - name: is_paid
+        description: Payment flag — standardised to BOOLEAN by the macro.
+
+      - name: source_system
+        description: Originating system identifier.
+        tests:
+          - not_null
+
+      - name: _ingested_at
+        description: UTC timestamp when the raw record arrived in bronze.
+        tests:
+          - not_null
+
+      - name: _updated_at
+        description: UTC timestamp of the dbt model run that produced this row.
+        tests:
+          - not_null
+
+      - name: _source_system
+        description: Copy of source_system for metadata consistency.
+
+      - name: _row_hash
+        description: MD5 hash of all business columns — used for CDC detection.
+        tests:
+          - not_null
